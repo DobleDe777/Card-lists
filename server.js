@@ -43,7 +43,7 @@ const server = http.createServer(function(req, res){
 			else res.write('<p>Such card does not exist!</p>');
 		}
 		else for(var i=0; i<96; i++)
-			res.write('<p>Card #' + (i+1) + ': ' + eventCards[i].eventTitle + '</p>');
+			res.write('<p><a href="./' + (i+1) + '">Card #' + (i+1) + '</a>: ' + eventCards[i].eventTitle + '</p>');
 		
 	}
 
