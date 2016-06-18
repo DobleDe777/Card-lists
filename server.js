@@ -1,56 +1,59 @@
-const http = require('http');
-const url=require('url');
-const hostname = '127.0.0.1';
-const port = 3000;
-const eventCards = require('./cards/cards.js');
-var cardNumber;
-const server = http.createServer(function(req, res){
-	res.setHeader('Content-Type', 'text/html');
-	res.write('<head><meta charset="UTF-8"></head>');
-	var pathname=url.parse(req.url).pathname;
-	if (pathname.substring(0,6)=='/cards') {
-		if (pathname[6]=='/'&&pathname[7]!=null){
-			cardNumber=parseInt(pathname.substring(7,10));
-			if (cardNumber<97){
-				res.write('<p>' + eventCards[cardNumber-1].eventTitle + '</p>' );				
-				res.write('<p>' + eventCards[cardNumber-1].type + '</p>' );
-				if (eventCards[cardNumber-1].eventPreCondition==null){
-					res.write('<p>This card does not have an event precondition!</p>');
-				}
-				else 
-					res.write('<p>' + eventCards[cardNumber-1].eventPreCondition + '</p>' );
-				res.write('<p>' + eventCards[cardNumber-1].eventText + '</p>' );
-				if (eventCards[cardNumber-1].eventDiscardCondition==null){
-					res.write('<p>This card does not have a discard condition!</p>');
-				}
-				else
-					res.write('<p>' + eventCards[cardNumber-1].eventDiscardCondition + '</p>' );
-				if (eventCards[cardNumber-1].multiplayerGameInformation==null){
-					res.write('<p>This card does not have any information about multiplayer games!</p>')	
-				}
-				else
-					res.write('<p>' + eventCards[cardNumber-1].multiplayerGameInformation + '</p>' );
-				res.write('<p>' + eventCards[cardNumber-1].combatTitle + '</p>' );
-				if (eventCards[cardNumber-1].combatPreCondition==null){
-					res.write('<p>This card does not have an event pre-condition!</p>');
-				}
-				else 
-					res.write('<p>' + eventCards[cardNumber-1].combatPreCondition + '</p>' );
-				res.write('<p>' + eventCards[cardNumber-1].combatText + '</p>' );
-				res.write('<p>' + eventCards[cardNumber-1].initiativeNumbers + '</p>' );
-				res.write('<p>' + cardNumber + '</p>' );		
-			}				
-			else res.write('<p>Such card does not exist!</p>');
-		}
-		else for(var i=0; i<96; i++)
-			res.write('<p><a href="./cards/' + (i+1) + '">Card #' + (i+1) + '</a>: ' + eventCards[i].eventTitle + '</p>');
-		
+var express = require('express');
+var app = express();
+const eventCards  =  require('./cards/cards.js');
+function beautify(string) {
+ return string
+  // insert a space before all caps
+    .replace(/([A-Z])/g, ' $1')
+    // uppercase the first character
+    .replace(/^./, function(str){ return str.toUpperCase(); });
+}
+
+function dooblede(cardNumber) {
+ var order = ['eventTitle', 'type', 'eventPreCondition', 'eventDiscardCondition',
+        'multiplayerGameInformation', 'combatTitle', 'combatPreCondition',
+        'combatText', 'initiativeNumbers'];
+ var kvArray = [];
+ var response = '';
+ order.forEach(
+ (value) => {
+	 kvArray.push(eventCards[cardNumber-1][value])
+});
+ kvArray.forEach(function(value, key) {
+  if (value == null || value == undefined) {
+   response += '<p>This card does not have ' + beautify(order[key]) + '!</p>';
+  } else {
+   response += '<p>' + value + '</p>';
+  }
+ });
+ return response;
+}
+
+
+app.get('/', function (req, res) {
+	res.send('Hello World!');
+});
+
+app.get('/cards', function (req, res) {
+	for(var i = 0; i<96; i++) {
+		res.write('<p><a href = "./cards/' + (i+1) + '">Card #' + (i+1) + '</a>: ' + eventCards[i].eventTitle + '</p>');
 	}
-
 	res.end();
-}).listen(3000);
+});
 
+app.get('/cards/:id', function (req, res) {
+	res.write('<head><meta charset="UTF-8"></head>');
+	res.write('<p>' + req.params.id + '</p>');
+	if((req.params.id < 97) && (req.params.id > 0)){
+		res.write('' + dooblede(req.params.id));
+	}
+	else {
+		res.write('<p>Such card does not exist!</p>');
+	}
+	res.end();
+	});
 
-server.listen(port, hostname, () => {
-	console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(3000, function(){
+	console.log('Example app listening on port 3000!');
+	
 });
